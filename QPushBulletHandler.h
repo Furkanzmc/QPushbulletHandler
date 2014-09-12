@@ -166,6 +166,21 @@ public:
     void registerForRealTimeEventStream();
 
     QNetworkAccessManager::NetworkAccessibility getNetworkAccessibility();
+    /**
+     * @brief Returns the local DeviceList without any requests to the server
+     * @return
+     */
+    const DeviceList getDeviceList();
+    /**
+     * @brief Returns the local ContactList without any requests to the server
+     * @return
+     */
+    const ContactList getContactList();
+    /**
+     * @brief Returns the local PushList without any requests to the server
+     * @return
+     */
+    const PushList getPushList();
 
 };
 

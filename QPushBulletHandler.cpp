@@ -706,3 +706,18 @@ QNetworkAccessManager::NetworkAccessibility QPushBulletHandler::getNetworkAccess
 {
     return mNetworkAccessibility;
 }
+
+const QPushBulletHandler::DeviceList QPushBulletHandler::getDeviceList()
+{
+    return mDevices;
+}
+
+const QPushBulletHandler::ContactList QPushBulletHandler::getContactList()
+{
+    return mContacts;
+}
+
+const QPushBulletHandler::PushList QPushBulletHandler::getPushList()
+{
+    return mPushes;
+}
