@@ -211,3 +211,7 @@ The first variable returns the error messages from Pushbullet and the second one
 ```C++
 connect(&handler, SIGNAL(didReceiveError(QString,QByteArray)), this, SLOT(receivedError(QString,QByteArray)));
 ```
+
+#TODO
+[] Fix file upload
+[] Implement file pushing
