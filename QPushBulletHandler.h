@@ -103,7 +103,7 @@ signals:
      * @param pushBulletErrorString
      * @param errorFromServer
      */
-    void didReceiveError(QString pushBulletErrorString, const QByteArray &errorFromServer);
+    void didReceiveError(const QNetworkReply *networkReply);
 
 private Q_SLOTS:
     void handleNetworkData(QNetworkReply *networkReply);

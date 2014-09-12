@@ -52,7 +52,7 @@ void QPushBulletHandler::handleNetworkData(QNetworkReply *networkReply)
         qDebug() << "Error String: " << networkReply->errorString();
         QByteArray response(networkReply->readAll());
         qDebug() << QString(response);
-        emit didReceiveError(networkReply->errorString(), response);
+        emit didReceiveError(networkReply);
         return;
     }
 
