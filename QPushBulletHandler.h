@@ -82,21 +82,21 @@ private:
 
 signals:
     void didReceiveDevices(const DeviceList &devices);
-    void didDeviceCreate(Device device);
-    void didDeviceUpdate(Device device);
+    void didDeviceCreate(const Device &device);
+    void didDeviceUpdate(const Device &device);
     void didDeviceDelete();
 
     void didReceiveContacts(const ContactList &contacts);
-    void didContactCreate(Contact contact);
-    void didContactUpdate(Contact contact);
+    void didContactCreate(const Contact &contact);
+    void didContactUpdate(const Contact &contact);
     void didContactDelete();
 
     void didReceivePushHistory(const PushList &pushes);
-    void didPush(Push push);
-    void didPushUpdate(Push push);
+    void didPush(const Push &push);
+    void didPushUpdate(const Push &push);
     void didPushDelete();
 
-    void didReceiveMirrorPush(MirrorPush mirror);
+    void didReceiveMirrorPush(const MirrorPush &mirror);
 
     /**
      * @brief Gets emitted when QNetworkAccessManager encounters a problem
