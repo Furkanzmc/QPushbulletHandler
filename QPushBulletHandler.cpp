@@ -228,7 +228,7 @@ void QPushBulletHandler::requestPushHistory()
     getRequest(mURLPushes);
 }
 
-void QPushBulletHandler::requestPush(Push push, QString deviceID, QString email)
+void QPushBulletHandler::requestPush(Push &push, QString deviceID, QString email)
 {
     /* [x] Note
      * [x] Link
@@ -288,17 +288,17 @@ void QPushBulletHandler::requestPush(Push push, QString deviceID, QString email)
     postRequest(mURLPushes, jsonDocument.toJson());
 }
 
-void QPushBulletHandler::requestPushToDevice(Push push, QString deviceID)
+void QPushBulletHandler::requestPushToDevice(Push &push, QString deviceID)
 {
     requestPush(push, deviceID, "");
 }
 
-void QPushBulletHandler::requestPushToContact(Push push, QString email)
+void QPushBulletHandler::requestPushToContact(Push &push, QString email)
 {
     requestPush(push, "", email);
 }
 
-void QPushBulletHandler::requestPushToAllDevices(Push push)
+void QPushBulletHandler::requestPushToAllDevices(Push &push)
 {
     requestPush(push, "", "");
 }

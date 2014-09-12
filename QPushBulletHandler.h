@@ -131,6 +131,8 @@ private:
     void parseMirrorPush(QString data);
     void parseTickle(QJsonObject jsonObject);
 
+    void requestPush(Push &push, QString deviceID, QString email);
+
     PUSH_TYPE getPushTypeFromString(QString type);
     QString getDeviceNameFromDeviceID(QString deviceID);
 
@@ -151,10 +153,9 @@ public:
     void requestContactDelete(QString contactID);
 
     void requestPushHistory();
-    void requestPush(Push push, QString deviceID, QString email);
-    void requestPushToDevice(Push push, QString deviceID);
-    void requestPushToContact(Push push, QString email);
-    void requestPushToAllDevices(Push push);
+    void requestPushToDevice(Push &push, QString deviceID);
+    void requestPushToContact(Push &push, QString email);
+    void requestPushToAllDevices(Push &push);
     void requestPushUpdate(QString pushID, bool dismissed);
     void requestPushDelete(QString pushID);
 
