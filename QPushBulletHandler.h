@@ -153,6 +153,7 @@ public:
     void requestContactDelete(QString contactID);
 
     void requestPushHistory();
+    void requestPushHistory(double modifiedAfter);
     void requestPushToDevice(Push &push, QString deviceID);
     void requestPushToContact(Push &push, QString email);
     void requestPushToAllDevices(Push &push);

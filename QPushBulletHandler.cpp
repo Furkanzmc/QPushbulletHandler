@@ -228,6 +228,15 @@ void QPushBulletHandler::requestPushHistory()
     getRequest(mURLPushes);
 }
 
+void QPushBulletHandler::requestPushHistory(double modifiedAfter)
+{
+    mCurrentOperation = CURRENT_OPERATION::GET_PUSH_HISTORY;
+    QString url(mURLPushes.toString());
+    url.append("?modified_after=");
+    url.append(QString::number(modifiedAfter));
+    getRequest(QUrl(url));
+}
+
 void QPushBulletHandler::requestPush(Push &push, QString deviceID, QString email)
 {
     /* [x] Note
