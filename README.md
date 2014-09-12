@@ -213,5 +213,5 @@ connect(&handler, SIGNAL(didReceiveError(QString,QByteArray)), this, SLOT(receiv
 ```
 
 #TODO
-[] Fix file upload
-[] Implement file pushing
+* Fix file upload
+* Implement file pushing
