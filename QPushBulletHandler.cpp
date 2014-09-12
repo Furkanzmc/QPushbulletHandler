@@ -1,8 +1,7 @@
-#include "QPushBulletHandler.h"
+#include "QPushbulletHandler.h"
 #include <QDebug>
 
-//TODO: Set the api key on the contructor
-QPushBulletHandler::QPushBulletHandler(QString apiKey)
+QPushbulletHandler::QPushbulletHandler(QString apiKey)
     : mNetworkManager()
     , mWebSocket()
     , mURLContacts("https://api.pushbullet.com/v2/contacts")
@@ -20,14 +19,14 @@ QPushBulletHandler::QPushBulletHandler(QString apiKey)
             , SLOT(handleNetworkAccessibilityChange(QNetworkAccessManager::NetworkAccessibility)));
 }
 
-void QPushBulletHandler::getRequest(QUrl url)
+void QPushbulletHandler::getRequest(QUrl url)
 {
     qDebug() << "Get Request";
     url.setUserName(mAPIKey);
     mNetworkManager.get(QNetworkRequest(url));
 }
 
-void QPushBulletHandler::postRequest(QUrl url, const QByteArray &data)
+void QPushbulletHandler::postRequest(QUrl url, const QByteArray &data)
 {
     qDebug() << "Post Request";
     QNetworkRequest request(url);
@@ -46,7 +45,7 @@ void QPushBulletHandler::postRequest(QUrl url, const QByteArray &data)
         mNetworkManager.post(request, data);
 }
 
-void QPushBulletHandler::handleNetworkData(QNetworkReply *networkReply)
+void QPushbulletHandler::handleNetworkData(QNetworkReply *networkReply)
 {
     if (networkReply->error()) {
         qDebug() << "Error String: " << networkReply->errorString();
@@ -107,12 +106,12 @@ void QPushBulletHandler::handleNetworkData(QNetworkReply *networkReply)
     mCurrentOperation = CURRENT_OPERATION::NONE;
 }
 
-void QPushBulletHandler::sessionConnected()
+void QPushbulletHandler::sessionConnected()
 {
     qDebug() << "Connected";
 }
 
-void QPushBulletHandler::handleNetworkAccessibilityChange(QNetworkAccessManager::NetworkAccessibility change)
+void QPushbulletHandler::handleNetworkAccessibilityChange(QNetworkAccessManager::NetworkAccessibility change)
 {
     mNetworkAccessibility = change;
     if (mNetworkAccessibility == QNetworkAccessManager::UnknownAccessibility)
@@ -123,29 +122,29 @@ void QPushBulletHandler::handleNetworkAccessibilityChange(QNetworkAccessManager:
         qDebug() << "Network is not accessible";
 }
 
-void QPushBulletHandler::webSocketConnected()
+void QPushbulletHandler::webSocketConnected()
 {
     qDebug() << "Web Socket Connected";
     connect(&mWebSocket, SIGNAL(textMessageReceived(QString)), this, SLOT(textMessageReceived(QString)));
 }
 
-void QPushBulletHandler::webSocketDisconnected()
+void QPushbulletHandler::webSocketDisconnected()
 {
     qDebug() << "Web Socket Disconnected";
 }
 
-void QPushBulletHandler::textMessageReceived(QString message)
+void QPushbulletHandler::textMessageReceived(QString message)
 {
     parseMirrorPush(message);
 }
 
-void QPushBulletHandler::requestDeviceList()
+void QPushbulletHandler::requestDeviceList()
 {
     mCurrentOperation = CURRENT_OPERATION::GET_DEVICE_LIST;
     getRequest(mURLDevices);
 }
 
-void QPushBulletHandler::requestCreateDevice(QString deviceName, QString model)
+void QPushbulletHandler::requestCreateDevice(QString deviceName, QString model)
 {
     QUrlQuery query;
     query.addQueryItem("nickname", deviceName);
@@ -156,7 +155,7 @@ void QPushBulletHandler::requestCreateDevice(QString deviceName, QString model)
     postRequest(mURLDevices, query.toString(QUrl::FullyDecoded).toUtf8());
 }
 
-void QPushBulletHandler::requestDeviceUpdate(QString deviceID, QString newNickname)
+void QPushbulletHandler::requestDeviceUpdate(QString deviceID, QString newNickname)
 {
     QString url = mURLDevices.toString();
     url.append("/");
@@ -168,7 +167,7 @@ void QPushBulletHandler::requestDeviceUpdate(QString deviceID, QString newNickna
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
-void QPushBulletHandler::requestDeviceDelete(QString deviceID)
+void QPushbulletHandler::requestDeviceDelete(QString deviceID)
 {
     QString url = mURLDevices.toString();
     url.append("/");
@@ -181,13 +180,13 @@ void QPushBulletHandler::requestDeviceDelete(QString deviceID)
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
-void QPushBulletHandler::requestContactList()
+void QPushbulletHandler::requestContactList()
 {
     mCurrentOperation = CURRENT_OPERATION::GET_CONTACT_LIST;
     getRequest(mURLContacts);
 }
 
-void QPushBulletHandler::requestCreateContact(QString name, QString email)
+void QPushbulletHandler::requestCreateContact(QString name, QString email)
 {
     QUrlQuery query;
     query.addQueryItem("name", name);
@@ -196,7 +195,7 @@ void QPushBulletHandler::requestCreateContact(QString name, QString email)
     postRequest(mURLContacts, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
-void QPushBulletHandler::requestContactUpdate(QString contactID, QString newName)
+void QPushbulletHandler::requestContactUpdate(QString contactID, QString newName)
 {
     QString url = mURLContacts.toString();
     url.append("/");
@@ -208,7 +207,7 @@ void QPushBulletHandler::requestContactUpdate(QString contactID, QString newName
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
-void QPushBulletHandler::requestContactDelete(QString contactID)
+void QPushbulletHandler::requestContactDelete(QString contactID)
 {
     QString url = mURLContacts.toString();
     url.append("/");
@@ -222,13 +221,13 @@ void QPushBulletHandler::requestContactDelete(QString contactID)
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
-void QPushBulletHandler::requestPushHistory()
+void QPushbulletHandler::requestPushHistory()
 {
     mCurrentOperation = CURRENT_OPERATION::GET_PUSH_HISTORY;
     getRequest(mURLPushes);
 }
 
-void QPushBulletHandler::requestPushHistory(double modifiedAfter)
+void QPushbulletHandler::requestPushHistory(double modifiedAfter)
 {
     mCurrentOperation = CURRENT_OPERATION::GET_PUSH_HISTORY;
     QString url(mURLPushes.toString());
@@ -237,7 +236,7 @@ void QPushBulletHandler::requestPushHistory(double modifiedAfter)
     getRequest(QUrl(url));
 }
 
-void QPushBulletHandler::requestPush(Push &push, QString deviceID, QString email)
+void QPushbulletHandler::requestPush(Push &push, QString deviceID, QString email)
 {
     /* [x] Note
      * [x] Link
@@ -297,22 +296,22 @@ void QPushBulletHandler::requestPush(Push &push, QString deviceID, QString email
     postRequest(mURLPushes, jsonDocument.toJson());
 }
 
-void QPushBulletHandler::requestPushToDevice(Push &push, QString deviceID)
+void QPushbulletHandler::requestPushToDevice(Push &push, QString deviceID)
 {
     requestPush(push, deviceID, "");
 }
 
-void QPushBulletHandler::requestPushToContact(Push &push, QString email)
+void QPushbulletHandler::requestPushToContact(Push &push, QString email)
 {
     requestPush(push, "", email);
 }
 
-void QPushBulletHandler::requestPushToAllDevices(Push &push)
+void QPushbulletHandler::requestPushToAllDevices(Push &push)
 {
     requestPush(push, "", "");
 }
 
-void QPushBulletHandler::requestPushUpdate(QString pushID, bool dismissed)
+void QPushbulletHandler::requestPushUpdate(QString pushID, bool dismissed)
 {
     QUrlQuery query;
     query.addQueryItem("dismissed", dismissed ? "true" : "false");
@@ -324,7 +323,7 @@ void QPushBulletHandler::requestPushUpdate(QString pushID, bool dismissed)
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
-void QPushBulletHandler::requestPushDelete(QString pushID)
+void QPushbulletHandler::requestPushDelete(QString pushID)
 {
     QString url = mURLPushes.toString();
     url.append("/");
@@ -338,7 +337,7 @@ void QPushBulletHandler::requestPushDelete(QString pushID)
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
-void QPushBulletHandler::parseDeviceResponse(const QByteArray &data)
+void QPushbulletHandler::parseDeviceResponse(const QByteArray &data)
 {
     mDevices.clear();
     QString strReply = (QString)data;
@@ -364,7 +363,7 @@ void QPushBulletHandler::parseDeviceResponse(const QByteArray &data)
     emit didReceiveDevices(mDevices);
 }
 
-void QPushBulletHandler::parseCreateDeviceResponse(const QByteArray &data)
+void QPushbulletHandler::parseCreateDeviceResponse(const QByteArray &data)
 {
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
@@ -383,7 +382,7 @@ void QPushBulletHandler::parseCreateDeviceResponse(const QByteArray &data)
     emit didDeviceCreate(device);
 }
 
-void QPushBulletHandler::parseUpdateDeviceResponce(const QByteArray &data)
+void QPushbulletHandler::parseUpdateDeviceResponce(const QByteArray &data)
 {
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
@@ -402,7 +401,7 @@ void QPushBulletHandler::parseUpdateDeviceResponce(const QByteArray &data)
     emit didDeviceUpdate(device);
 }
 
-void QPushBulletHandler::parseContactResponse(const QByteArray &data)
+void QPushbulletHandler::parseContactResponse(const QByteArray &data)
 {
     mContacts.clear();
 
@@ -424,7 +423,7 @@ void QPushBulletHandler::parseContactResponse(const QByteArray &data)
     emit didReceiveContacts(mContacts);
 }
 
-void QPushBulletHandler::parseCreateContactResponse(const QByteArray &data)
+void QPushbulletHandler::parseCreateContactResponse(const QByteArray &data)
 {
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
@@ -438,7 +437,7 @@ void QPushBulletHandler::parseCreateContactResponse(const QByteArray &data)
     emit didContactCreate(contact);
 }
 
-void QPushBulletHandler::parseUpdateContactResponse(const QByteArray &data)
+void QPushbulletHandler::parseUpdateContactResponse(const QByteArray &data)
 {
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
@@ -452,7 +451,7 @@ void QPushBulletHandler::parseUpdateContactResponse(const QByteArray &data)
     emit didContactUpdate(contact);
 }
 
-void QPushBulletHandler::parsePushHistoryResponse(const QByteArray &data)
+void QPushbulletHandler::parsePushHistoryResponse(const QByteArray &data)
 {
     if (mCurrentOperation != CURRENT_OPERATION::UPDATE_PUSH_LIST)
         mPushes.clear();
@@ -505,7 +504,7 @@ void QPushBulletHandler::parsePushHistoryResponse(const QByteArray &data)
     emit didReceivePushHistory(mPushes);
 }
 
-void QPushBulletHandler::parsePushResponse(const QByteArray &data)
+void QPushbulletHandler::parsePushResponse(const QByteArray &data)
 {
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
@@ -550,7 +549,7 @@ void QPushBulletHandler::parsePushResponse(const QByteArray &data)
         emit didPush(push);
 }
 
-QPushBulletHandler::PUSH_TYPE QPushBulletHandler::getPushTypeFromString(QString type)
+QPushbulletHandler::PUSH_TYPE QPushbulletHandler::getPushTypeFromString(QString type)
 {
     PUSH_TYPE t = PUSH_TYPE::NONE;
     if (type == "address")
@@ -566,7 +565,7 @@ QPushBulletHandler::PUSH_TYPE QPushBulletHandler::getPushTypeFromString(QString 
     return t;
 }
 
-void QPushBulletHandler::parseMirrorPush(QString data)
+void QPushbulletHandler::parseMirrorPush(QString data)
 {
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
@@ -594,7 +593,7 @@ void QPushBulletHandler::parseMirrorPush(QString data)
     emit didReceiveMirrorPush(mirror);
 }
 
-void QPushBulletHandler::parseTickle(QJsonObject jsonObject)
+void QPushbulletHandler::parseTickle(QJsonObject jsonObject)
 {
     if (jsonObject["subtype"] == "push") {
         if (mPushes.isEmpty()) {
@@ -615,7 +614,7 @@ void QPushBulletHandler::parseTickle(QJsonObject jsonObject)
     }
 }
 
-QString QPushBulletHandler::getDeviceNameFromDeviceID(QString deviceID)
+QString QPushbulletHandler::getDeviceNameFromDeviceID(QString deviceID)
 {
     if (mDevices.isEmpty())
         return "";
@@ -629,7 +628,7 @@ QString QPushBulletHandler::getDeviceNameFromDeviceID(QString deviceID)
     return name;
 }
 
-void QPushBulletHandler::requestUploadFile(QString fileName, QString filePath)
+void QPushbulletHandler::requestUploadFile(QString fileName, QString filePath)
 {
     mFilePath = filePath;
     mFileName = fileName;
@@ -641,7 +640,7 @@ void QPushBulletHandler::requestUploadFile(QString fileName, QString filePath)
     postRequest(mURLUploadRequest, jsonDocument.toJson());
 }
 
-void QPushBulletHandler::parseUploadRequestResponse(const QByteArray &data)
+void QPushbulletHandler::parseUploadRequestResponse(const QByteArray &data)
 {
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
@@ -666,7 +665,7 @@ void QPushBulletHandler::parseUploadRequestResponse(const QByteArray &data)
     qDebug() << url.toString();
 }
 
-void QPushBulletHandler::postMultipart(QUrl url, QUrlQuery query)
+void QPushbulletHandler::postMultipart(QUrl url, QUrlQuery query)
 {
     multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
@@ -694,7 +693,7 @@ void QPushBulletHandler::postMultipart(QUrl url, QUrlQuery query)
 
 }
 
-void QPushBulletHandler::registerForRealTimeEventStream()
+void QPushbulletHandler::registerForRealTimeEventStream()
 {
     //Connect QWebSocket signals
     connect(&mWebSocket, SIGNAL(connected()), this, SLOT(webSocketConnected()));
@@ -702,22 +701,22 @@ void QPushBulletHandler::registerForRealTimeEventStream()
     mWebSocket.open(QUrl(socketURL));
 }
 
-QNetworkAccessManager::NetworkAccessibility QPushBulletHandler::getNetworkAccessibility()
+QNetworkAccessManager::NetworkAccessibility QPushbulletHandler::getNetworkAccessibility()
 {
     return mNetworkAccessibility;
 }
 
-const QPushBulletHandler::DeviceList QPushBulletHandler::getDeviceList()
+const QPushbulletHandler::DeviceList QPushbulletHandler::getDeviceList()
 {
     return mDevices;
 }
 
-const QPushBulletHandler::ContactList QPushBulletHandler::getContactList()
+const QPushbulletHandler::ContactList QPushbulletHandler::getContactList()
 {
     return mContacts;
 }
 
-const QPushBulletHandler::PushList QPushBulletHandler::getPushList()
+const QPushbulletHandler::PushList QPushbulletHandler::getPushList()
 {
     return mPushes;
 }

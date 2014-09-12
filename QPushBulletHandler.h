@@ -5,12 +5,12 @@
 #include <QtWebSockets>
 
 //NOTE: Do not call any requests before the current request is finished
-class QPushBulletHandler : public QObject
+class QPushbulletHandler : public QObject
 {
     Q_OBJECT
 
 public:
-    QPushBulletHandler(QString apiKey);
+    QPushbulletHandler(QString apiKey);
 
 public:
     enum class PUSH_TYPE {
