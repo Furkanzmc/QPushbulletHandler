@@ -22,6 +22,9 @@ Features
 
 Usage
 ======
+Remember to add network and websockets to you qmake file
+> QT += network websockets
+
 ##Authentication
 Get the API key from your account page on Pushbullet.
 
