@@ -1,5 +1,6 @@
 #include "QPushbulletHandler.h"
 #include <QDebug>
+#include <iostream>
 
 QPushbulletHandler::QPushbulletHandler(QString apiKey)
     : mNetworkManager()
