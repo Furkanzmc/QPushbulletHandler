@@ -3,47 +3,47 @@
 #include <iostream>
 
 QPushbulletHandler::QPushbulletHandler(QString apiKey)
-    : mNetworkManager()
-    , mWebSocket()
-    , mURLContacts("https://api.pushbullet.com/v2/contacts")
-    , mURLDevices("https://api.pushbullet.com/v2/devices")
-    , mURLMe("https://api.pushbullet.com/v2/users/me")
-    , mURLPushes("https://api.pushbullet.com/v2/pushes")
-    , mURLUploadRequest("https://api.pushbullet.com/v2/upload-request")
-    , mAPIKey(apiKey)
-    , mNetworkAccessibility(QNetworkAccessManager::NetworkAccessibility::UnknownAccessibility)
+    : m_NetworkManager()
+    , m_WebSocket()
+    , m_URLContacts("https://api.pushbullet.com/v2/contacts")
+    , m_URLDevices("https://api.pushbullet.com/v2/devices")
+    , m_URLMe("https://api.pushbullet.com/v2/users/me")
+    , m_URLPushes("https://api.pushbullet.com/v2/pushes")
+    , m_URLUploadRequest("https://api.pushbullet.com/v2/upload-request")
+    , m_APIKey(apiKey)
+    , m_NetworkAccessibility(QNetworkAccessManager::NetworkAccessibility::UnknownAccessibility)
 {
     //Connect the QNetworkAccessManager signals
-    connect(&mNetworkManager, SIGNAL(finished(QNetworkReply *)), this, SLOT(handleNetworkData(QNetworkReply *)));
-    connect(&mNetworkManager, SIGNAL(networkSessionConnected()), this, SLOT(sessionConnected()));
-    connect(&mNetworkManager, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)), this
+    connect(&m_NetworkManager, SIGNAL(finished(QNetworkReply *)), this, SLOT(handleNetworkData(QNetworkReply *)));
+    connect(&m_NetworkManager, SIGNAL(networkSessionConnected()), this, SLOT(sessionConnected()));
+    connect(&m_NetworkManager, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)), this
             , SLOT(handleNetworkAccessibilityChange(QNetworkAccessManager::NetworkAccessibility)));
 }
 
 void QPushbulletHandler::getRequest(QUrl url)
 {
     qDebug() << "Get Request";
-    url.setUserName(mAPIKey);
-    mNetworkManager.get(QNetworkRequest(url));
+    url.setUserName(m_APIKey);
+    m_NetworkManager.get(QNetworkRequest(url));
 }
 
 void QPushbulletHandler::postRequest(QUrl url, const QByteArray &data)
 {
-    qDebug() << "Post Request";
+    qDebug() << "Post Request: " << QString(data);
     QNetworkRequest request(url);
-    if (mCurrentOperation == CURRENT_OPERATION::UPLOAD_FILE) {
+    if (m_CurrentOperation == CURRENT_OPERATION::UPLOAD_FILE) {
         request.setRawHeader(QString("Content-Type").toUtf8(), QString("multipart/form-data; boundary=margin").toUtf8());
     }
     else {
-        url.setUserName(mAPIKey);
+        url.setUserName(m_APIKey);
         request.setUrl(url);
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     }
-    if (mCurrentOperation == CURRENT_OPERATION::DELETE_CONTACT || mCurrentOperation == CURRENT_OPERATION::DELETE_DEVICE
-        || mCurrentOperation == CURRENT_OPERATION::DELETE_PUSH)
-        mNetworkManager.deleteResource(QNetworkRequest(url));
+    if (m_CurrentOperation == CURRENT_OPERATION::DELETE_CONTACT || m_CurrentOperation == CURRENT_OPERATION::DELETE_DEVICE
+        || m_CurrentOperation == CURRENT_OPERATION::DELETE_PUSH)
+        m_NetworkManager.deleteResource(QNetworkRequest(url));
     else
-        mNetworkManager.post(request, data);
+        m_NetworkManager.post(request, data);
 }
 
 void QPushbulletHandler::handleNetworkData(QNetworkReply *networkReply)
@@ -57,54 +57,54 @@ void QPushbulletHandler::handleNetworkData(QNetworkReply *networkReply)
     }
 
     QByteArray response(networkReply->readAll());
-    if (mCurrentOperation == CURRENT_OPERATION::GET_DEVICE_LIST) {
+    if (m_CurrentOperation == CURRENT_OPERATION::GET_DEVICE_LIST) {
         parseDeviceResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::CREATE_DEVICE) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::CREATE_DEVICE) {
         parseCreateDeviceResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::DELETE_DEVICE) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::DELETE_DEVICE) {
         emit didDeviceDelete();
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::UPDATE_DEVICE) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::UPDATE_DEVICE) {
         parseUpdateDeviceResponce(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::GET_CONTACT_LIST) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::GET_CONTACT_LIST) {
         parseContactResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::CREATE_CONTACT) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::CREATE_CONTACT) {
         parseCreateContactResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::UPDATE_CONTACT) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::UPDATE_CONTACT) {
         parseUpdateContactResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::DELETE_CONTACT) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::DELETE_CONTACT) {
         emit didContactDelete();
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::GET_PUSH_HISTORY) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::GET_PUSH_HISTORY) {
         parsePushHistoryResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::PUSH) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::PUSH) {
         parsePushResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::PUSH_UPDATE) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::PUSH_UPDATE) {
         parsePushResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::UPDATE_PUSH_LIST) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::UPDATE_PUSH_LIST) {
         parsePushHistoryResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::DELETE_PUSH) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::DELETE_PUSH) {
         emit didPushDelete();
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::REQUEST_UPLOAD_FILE) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::REQUEST_UPLOAD_FILE) {
         parseUploadRequestResponse(response);
     }
-    else if (mCurrentOperation == CURRENT_OPERATION::UPLOAD_FILE) {
+    else if (m_CurrentOperation == CURRENT_OPERATION::UPLOAD_FILE) {
         QString str(response);
         qDebug() << str;
     }
 
-    mCurrentOperation = CURRENT_OPERATION::NONE;
+    m_CurrentOperation = CURRENT_OPERATION::NONE;
 }
 
 void QPushbulletHandler::sessionConnected()
@@ -114,19 +114,19 @@ void QPushbulletHandler::sessionConnected()
 
 void QPushbulletHandler::handleNetworkAccessibilityChange(QNetworkAccessManager::NetworkAccessibility change)
 {
-    mNetworkAccessibility = change;
-    if (mNetworkAccessibility == QNetworkAccessManager::UnknownAccessibility)
+    m_NetworkAccessibility = change;
+    if (m_NetworkAccessibility == QNetworkAccessManager::UnknownAccessibility)
         qDebug() << "Unknown network accessibility";
-    else if (mNetworkAccessibility == QNetworkAccessManager::Accessible)
+    else if (m_NetworkAccessibility == QNetworkAccessManager::Accessible)
         qDebug() << "Network is accessible";
-    else if (mNetworkAccessibility == QNetworkAccessManager::NotAccessible)
+    else if (m_NetworkAccessibility == QNetworkAccessManager::NotAccessible)
         qDebug() << "Network is not accessible";
 }
 
 void QPushbulletHandler::webSocketConnected()
 {
     qDebug() << "Web Socket Connected";
-    connect(&mWebSocket, SIGNAL(textMessageReceived(QString)), this, SLOT(textMessageReceived(QString)));
+    connect(&m_WebSocket, SIGNAL(textMessageReceived(QString)), this, SLOT(textMessageReceived(QString)));
 }
 
 void QPushbulletHandler::webSocketDisconnected()
@@ -141,40 +141,43 @@ void QPushbulletHandler::textMessageReceived(QString message)
 
 void QPushbulletHandler::requestDeviceList()
 {
-    mCurrentOperation = CURRENT_OPERATION::GET_DEVICE_LIST;
-    getRequest(mURLDevices);
+    m_CurrentOperation = CURRENT_OPERATION::GET_DEVICE_LIST;
+    getRequest(m_URLDevices);
 }
 
 void QPushbulletHandler::requestCreateDevice(QString deviceName, QString model)
 {
-    QUrlQuery query;
-    query.addQueryItem("nickname", deviceName);
+    QJsonDocument doc;
+    QJsonObject obj;
+    obj["nickname"] = deviceName;
+    obj["type"] = "stream";
+
     if (!model.isEmpty())
-        query.addQueryItem("manufacturer", model);
-    query.addQueryItem("type", "stream");
-    mCurrentOperation = CURRENT_OPERATION::CREATE_DEVICE;
-    postRequest(mURLDevices, query.toString(QUrl::FullyDecoded).toUtf8());
+        obj["manufacturer"] = model;
+    doc.setObject(obj);
+    m_CurrentOperation = CURRENT_OPERATION::CREATE_DEVICE;
+    postRequest(m_URLDevices, doc.toJson());
 }
 
 void QPushbulletHandler::requestDeviceUpdate(QString deviceID, QString newNickname)
 {
-    QString url = mURLDevices.toString();
+    QString url = m_URLDevices.toString();
     url.append("/");
     url.append(deviceID);
     QUrl modifiedURL(url);
     QUrlQuery query;
     query.addQueryItem("nickname", newNickname);
-    mCurrentOperation = CURRENT_OPERATION::UPDATE_DEVICE;
+    m_CurrentOperation = CURRENT_OPERATION::UPDATE_DEVICE;
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
 void QPushbulletHandler::requestDeviceDelete(QString deviceID)
 {
-    QString url = mURLDevices.toString();
+    QString url = m_URLDevices.toString();
     url.append("/");
     url.append(deviceID);
     QUrl modifiedURL(url);
-    mCurrentOperation = CURRENT_OPERATION::DELETE_DEVICE;
+    m_CurrentOperation = CURRENT_OPERATION::DELETE_DEVICE;
     QUrlQuery query;
     query.setQueryDelimiters(' ', '&');
     query.addQueryItem("-X", "DELETE");
@@ -183,8 +186,8 @@ void QPushbulletHandler::requestDeviceDelete(QString deviceID)
 
 void QPushbulletHandler::requestContactList()
 {
-    mCurrentOperation = CURRENT_OPERATION::GET_CONTACT_LIST;
-    getRequest(mURLContacts);
+    m_CurrentOperation = CURRENT_OPERATION::GET_CONTACT_LIST;
+    getRequest(m_URLContacts);
 }
 
 void QPushbulletHandler::requestCreateContact(QString name, QString email)
@@ -192,29 +195,29 @@ void QPushbulletHandler::requestCreateContact(QString name, QString email)
     QUrlQuery query;
     query.addQueryItem("name", name);
     query.addQueryItem("email", email);
-    mCurrentOperation = CURRENT_OPERATION::CREATE_CONTACT;
-    postRequest(mURLContacts, query.toString(QUrl::FullyEncoded).toUtf8());
+    m_CurrentOperation = CURRENT_OPERATION::CREATE_CONTACT;
+    postRequest(m_URLContacts, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
 void QPushbulletHandler::requestContactUpdate(QString contactID, QString newName)
 {
-    QString url = mURLContacts.toString();
+    QString url = m_URLContacts.toString();
     url.append("/");
     url.append(contactID);
     QUrl modifiedURL(url);
     QUrlQuery query;
     query.addQueryItem("name", newName);
-    mCurrentOperation = CURRENT_OPERATION::UPDATE_CONTACT;
+    m_CurrentOperation = CURRENT_OPERATION::UPDATE_CONTACT;
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
 void QPushbulletHandler::requestContactDelete(QString contactID)
 {
-    QString url = mURLContacts.toString();
+    QString url = m_URLContacts.toString();
     url.append("/");
     url.append(contactID);
     QUrl modifiedURL(url);
-    mCurrentOperation = CURRENT_OPERATION::DELETE_CONTACT;
+    m_CurrentOperation = CURRENT_OPERATION::DELETE_CONTACT;
     QUrlQuery query;
     query.setQueryDelimiters(' ', '&');
     query.addQueryItem("-X", "DELETE");
@@ -224,14 +227,14 @@ void QPushbulletHandler::requestContactDelete(QString contactID)
 
 void QPushbulletHandler::requestPushHistory()
 {
-    mCurrentOperation = CURRENT_OPERATION::GET_PUSH_HISTORY;
-    getRequest(mURLPushes);
+    m_CurrentOperation = CURRENT_OPERATION::GET_PUSH_HISTORY;
+    getRequest(m_URLPushes);
 }
 
 void QPushbulletHandler::requestPushHistory(double modifiedAfter)
 {
-    mCurrentOperation = CURRENT_OPERATION::GET_PUSH_HISTORY;
-    QString url(mURLPushes.toString());
+    m_CurrentOperation = CURRENT_OPERATION::GET_PUSH_HISTORY;
+    QString url(m_URLPushes.toString());
     url.append("?modified_after=");
     url.append(QString::number(modifiedAfter));
     getRequest(QUrl(url));
@@ -290,11 +293,11 @@ void QPushbulletHandler::requestPush(Push &push, QString deviceID, QString email
         jsonObject["file_url"] = push.fileURL;
         jsonObject["body"] = push.body;
     }
-    mCurrentOperation = CURRENT_OPERATION::PUSH;
+    m_CurrentOperation = CURRENT_OPERATION::PUSH;
 
     jsonDocument.setObject(jsonObject);
     qDebug() << QString(jsonDocument.toJson());
-    postRequest(mURLPushes, jsonDocument.toJson());
+    postRequest(m_URLPushes, jsonDocument.toJson());
 }
 
 void QPushbulletHandler::requestPushToDevice(Push &push, QString deviceID)
@@ -316,21 +319,21 @@ void QPushbulletHandler::requestPushUpdate(QString pushID, bool dismissed)
 {
     QUrlQuery query;
     query.addQueryItem("dismissed", dismissed ? "true" : "false");
-    QString url = mURLPushes.toString();
+    QString url = m_URLPushes.toString();
     url.append("/");
     url.append(pushID);
     QUrl modifiedURL(url);
-    mCurrentOperation = CURRENT_OPERATION::PUSH_UPDATE;
+    m_CurrentOperation = CURRENT_OPERATION::PUSH_UPDATE;
     postRequest(modifiedURL, query.toString(QUrl::FullyEncoded).toUtf8());
 }
 
 void QPushbulletHandler::requestPushDelete(QString pushID)
 {
-    QString url = mURLPushes.toString();
+    QString url = m_URLPushes.toString();
     url.append("/");
     url.append(pushID);
     QUrl modifiedURL(url);
-    mCurrentOperation = CURRENT_OPERATION::DELETE_PUSH;
+    m_CurrentOperation = CURRENT_OPERATION::DELETE_PUSH;
     QUrlQuery query;
     query.setQueryDelimiters(' ', '&');
     query.addQueryItem("-X", "DELETE");
@@ -340,13 +343,13 @@ void QPushbulletHandler::requestPushDelete(QString pushID)
 
 void QPushbulletHandler::parseDeviceResponse(const QByteArray &data)
 {
-    mDevices.clear();
+    m_Devices.clear();
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
     QJsonObject jsonObject = jsonResponse.object();
     QJsonArray jsonArray = jsonObject["devices"].toArray();
 
-    foreach(const QJsonValue & value, jsonArray) {
+    foreach (const QJsonValue &value, jsonArray) {
         QJsonObject obj = value.toObject();
         Device device;
         device.nickname = obj["nickname"].toString();
@@ -359,9 +362,9 @@ void QPushbulletHandler::parseDeviceResponse(const QByteArray &data)
         device.type = obj["type"].toString();
         device.pushable = obj["pushable"].toBool();
         device.pushToken = obj["push_token"].toString();
-        mDevices.append(device);
+        m_Devices.append(device);
     }
-    emit didReceiveDevices(mDevices);
+    emit didReceiveDevices(m_Devices);
 }
 
 void QPushbulletHandler::parseCreateDeviceResponse(const QByteArray &data)
@@ -404,14 +407,14 @@ void QPushbulletHandler::parseUpdateDeviceResponce(const QByteArray &data)
 
 void QPushbulletHandler::parseContactResponse(const QByteArray &data)
 {
-    mContacts.clear();
+    m_Contacts.clear();
 
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
     QJsonObject jsonObject = jsonResponse.object();
     QJsonArray jsonArray = jsonObject["contacts"].toArray();
 
-    foreach(const QJsonValue & value, jsonArray) {
+    foreach (const QJsonValue &value, jsonArray) {
         QJsonObject obj = value.toObject();
         Contact contact;
         contact.name = obj["name"].toString();
@@ -419,9 +422,9 @@ void QPushbulletHandler::parseContactResponse(const QByteArray &data)
             continue;
         contact.email = obj["email"].toString();
         contact.ID = obj["iden"].toString();
-        mContacts.append(contact);
+        m_Contacts.append(contact);
     }
-    emit didReceiveContacts(mContacts);
+    emit didReceiveContacts(m_Contacts);
 }
 
 void QPushbulletHandler::parseCreateContactResponse(const QByteArray &data)
@@ -454,14 +457,14 @@ void QPushbulletHandler::parseUpdateContactResponse(const QByteArray &data)
 
 void QPushbulletHandler::parsePushHistoryResponse(const QByteArray &data)
 {
-    if (mCurrentOperation != CURRENT_OPERATION::UPDATE_PUSH_LIST)
-        mPushes.clear();
+    if (m_CurrentOperation != CURRENT_OPERATION::UPDATE_PUSH_LIST)
+        m_Pushes.clear();
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
     QJsonObject jsonObject = jsonResponse.object();
     QJsonArray jsonArray = jsonObject["pushes"].toArray();
 
-    foreach(const QJsonValue & value, jsonArray) {
+    foreach (const QJsonValue &value, jsonArray) {
         QJsonObject jsonObject = value.toObject();
         Push push;
 
@@ -500,9 +503,9 @@ void QPushbulletHandler::parsePushHistoryResponse(const QByteArray &data)
             push.body = jsonObject["body"].toString();
         }
 
-        mPushes.append(push);
+        m_Pushes.append(push);
     }
-    emit didReceivePushHistory(mPushes);
+    emit didReceivePushHistory(m_Pushes);
 }
 
 void QPushbulletHandler::parsePushResponse(const QByteArray &data)
@@ -544,13 +547,13 @@ void QPushbulletHandler::parsePushResponse(const QByteArray &data)
         push.fileURL = jsonObject["file_url"].toString();
         push.body = jsonObject["body"].toString();
     }
-    if (mCurrentOperation == CURRENT_OPERATION::PUSH_UPDATE)
+    if (m_CurrentOperation == CURRENT_OPERATION::PUSH_UPDATE)
         emit didPushUpdate(push);
     else
         emit didPush(push);
 }
 
-QPushbulletHandler::PUSH_TYPE QPushbulletHandler::getPushTypeFromString(QString type)
+PUSH_TYPE QPushbulletHandler::getPushTypeFromString(QString type)
 {
     PUSH_TYPE t = PUSH_TYPE::NONE;
     if (type == "address")
@@ -597,17 +600,17 @@ void QPushbulletHandler::parseMirrorPush(QString data)
 void QPushbulletHandler::parseTickle(QJsonObject jsonObject)
 {
     if (jsonObject["subtype"] == "push") {
-        if (mPushes.isEmpty()) {
+        if (m_Pushes.isEmpty()) {
             requestPushHistory();
         }
         else {
-            mCurrentOperation = CURRENT_OPERATION::UPDATE_PUSH_LIST;
+            m_CurrentOperation = CURRENT_OPERATION::UPDATE_PUSH_LIST;
             QUrlQuery query;
-            std::string created = std::to_string(mPushes.first().modified);
+            std::string created = std::to_string(m_Pushes.first().modified);
             query.addQueryItem("modified_after", QString::fromStdString(created));
-            QUrl modifiedURL = mURLPushes;
+            QUrl modifiedURL = m_URLPushes;
             modifiedURL.setQuery(query);
-            getRequest(mURLPushes);
+            getRequest(m_URLPushes);
         }
     }
     else if (jsonObject["subtype"] == "device") {
@@ -617,12 +620,12 @@ void QPushbulletHandler::parseTickle(QJsonObject jsonObject)
 
 QString QPushbulletHandler::getDeviceNameFromDeviceID(QString deviceID)
 {
-    if (mDevices.isEmpty())
+    if (m_Devices.isEmpty())
         return "";
     QString name;
-    for (int i = 0; i < mDevices.count(); i++) {
-        if (mDevices.at(i).ID == deviceID) {
-            name = mDevices.at(i).nickname;
+    for (int i = 0; i < m_Devices.count(); i++) {
+        if (m_Devices.at(i).ID == deviceID) {
+            name = m_Devices.at(i).nickname;
             break;
         }
     }
@@ -631,14 +634,14 @@ QString QPushbulletHandler::getDeviceNameFromDeviceID(QString deviceID)
 
 void QPushbulletHandler::requestUploadFile(QString fileName, QString filePath)
 {
-    mFilePath = filePath;
-    mFileName = fileName;
+    m_FilePath = filePath;
+    m_FileName = fileName;
     QJsonDocument jsonDocument;
     QJsonObject jsonObject;
     jsonObject["file_name"] = fileName;
     jsonDocument.setObject(jsonObject);
-    mCurrentOperation = CURRENT_OPERATION::REQUEST_UPLOAD_FILE;
-    postRequest(mURLUploadRequest, jsonDocument.toJson());
+    m_CurrentOperation = CURRENT_OPERATION::REQUEST_UPLOAD_FILE;
+    postRequest(m_URLUploadRequest, jsonDocument.toJson());
 }
 
 void QPushbulletHandler::parseUploadRequestResponse(const QByteArray &data)
@@ -658,7 +661,7 @@ void QPushbulletHandler::parseUploadRequestResponse(const QByteArray &data)
     query.addQueryItem("content-type", obj["content-type"].toString());
 
     //Upload file
-    mCurrentOperation = CURRENT_OPERATION::UPLOAD_FILE;
+    m_CurrentOperation = CURRENT_OPERATION::UPLOAD_FILE;
     postMultipart(QUrl(jsonObject["upload_url"].toString()), query);
 
     QUrl url(jsonObject["upload_url"].toString());
@@ -668,27 +671,27 @@ void QPushbulletHandler::parseUploadRequestResponse(const QByteArray &data)
 
 void QPushbulletHandler::postMultipart(QUrl url, QUrlQuery query)
 {
-    multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    m_MultiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
     QHttpPart imagePart;
     imagePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/json"));
-    file = new QFile("/Users/Furkanzmc/Desktop/response.json");
-    if (!file->open(QIODevice::ReadOnly))
-        qDebug() << file->errorString();
+    m_File = new QFile("/Users/Furkanzmc/Desktop/response.json");
+    if (!m_File->open(QIODevice::ReadOnly))
+        qDebug() << m_File->errorString();
     imagePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"response\";filename=\"response.json\""));
-    imagePart.setBodyDevice(file);
-    file->setParent(multiPart); // we cannot delete the file now, so delete it with the multiPart
+    imagePart.setBodyDevice(m_File);
+    m_File->setParent(m_MultiPart); // we cannot delete the file now, so delete it with the multiPart
 
-    multiPart->append(imagePart);
+    m_MultiPart->append(imagePart);
 
     url.setQuery(query);
     QNetworkRequest request(url);
     request.setRawHeader(QString("Content-Type").toUtf8(), QString("multipart/form-data;boundary=\"margin\"").toUtf8());
-    request.setRawHeader(QString("Content-Length").toUtf8(), QString(file->readAll().length()).toUtf8());
+    request.setRawHeader(QString("Content-Length").toUtf8(), QString(m_File->readAll().length()).toUtf8());
 
-    qDebug() << "Length: " << QString(file->readAll());
-    QNetworkReply *reply = mNetworkManager.put(request, multiPart);
-    multiPart->setParent(reply);
+    qDebug() << "Length: " << QString(m_File->readAll());
+    QNetworkReply *reply = m_NetworkManager.put(request, m_MultiPart);
+    m_MultiPart->setParent(reply);
     connect(reply, SIGNAL(uploadProgress(qint64, qint64)), this, SLOT(uploadProgress(qint64, qint64)));
     connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(uploadError(QNetworkReply::NetworkError)));
 
@@ -697,27 +700,27 @@ void QPushbulletHandler::postMultipart(QUrl url, QUrlQuery query)
 void QPushbulletHandler::registerForRealTimeEventStream()
 {
     //Connect QWebSocket signals
-    connect(&mWebSocket, SIGNAL(connected()), this, SLOT(webSocketConnected()));
-    const QString socketURL = "wss://stream.pushbullet.com/websocket/" + mAPIKey;
-    mWebSocket.open(QUrl(socketURL));
+    connect(&m_WebSocket, SIGNAL(connected()), this, SLOT(webSocketConnected()));
+    const QString socketURL = "wss://stream.pushbullet.com/websocket/" + m_APIKey;
+    m_WebSocket.open(QUrl(socketURL));
 }
 
 QNetworkAccessManager::NetworkAccessibility QPushbulletHandler::getNetworkAccessibility()
 {
-    return mNetworkAccessibility;
+    return m_NetworkAccessibility;
 }
 
-const QPushbulletHandler::DeviceList QPushbulletHandler::getDeviceList()
+const DeviceList QPushbulletHandler::getDeviceList()
 {
-    return mDevices;
+    return m_Devices;
 }
 
-const QPushbulletHandler::ContactList QPushbulletHandler::getContactList()
+const ContactList QPushbulletHandler::getContactList()
 {
-    return mContacts;
+    return m_Contacts;
 }
 
-const QPushbulletHandler::PushList QPushbulletHandler::getPushList()
+const PushList QPushbulletHandler::getPushList()
 {
-    return mPushes;
+    return m_Pushes;
 }

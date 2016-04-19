@@ -4,6 +4,40 @@
 #include <QtNetwork>
 #include <QtWebSockets>
 
+enum class PUSH_TYPE {
+    NOTE,
+    LINK,
+    LIST,
+    ADDRESS,
+    FILE,
+    NONE
+};
+
+struct Device {
+    QString ID, pushToken;
+    int appVersion;
+    bool active;
+    QString nickname, manufacturer, type;
+    bool pushable;
+};
+struct Contact {
+    QString ID, name, email;
+};
+struct Push {
+    QString ID, title, body, url, targetDeviceID, senderEmail, receiverEmail, addressName, address, fileName, fileType,
+            fileURL;
+    PUSH_TYPE type;
+    double modified, created;
+    QStringList listItems;
+};
+struct MirrorPush {
+    QString type, applicationName, body, dismissable, notificationID, sourceDeviceID, sourceUserID, title, sourceDeviceNickname;
+};
+
+typedef QList<Device> DeviceList;
+typedef QList<Contact> ContactList;
+typedef QList<Push> PushList;
+
 //NOTE: Do not call any requests before the current request is finished
 class QPushbulletHandler : public QObject
 {
@@ -13,14 +47,6 @@ public:
     QPushbulletHandler(QString apiKey);
 
 public:
-    enum class PUSH_TYPE {
-        NOTE,
-        LINK,
-        LIST,
-        ADDRESS,
-        FILE,
-        NONE
-    };
     enum class CURRENT_OPERATION {
         GET_DEVICE_LIST,
         GET_CONTACT_LIST,
@@ -39,46 +65,26 @@ public:
         UPLOAD_FILE,
         NONE
     };
-    struct Device {
-        QString ID, pushToken;
-        int appVersion;
-        bool active;
-        QString nickname, manufacturer, type;
-        bool pushable;
-    };
-    struct Contact {
-        QString ID, name, email;
-    };
-    struct Push {
-        QString ID, title, body, url, targetDeviceID, senderEmail, receiverEmail, addressName, address, fileName, fileType,
-                fileURL;
-        PUSH_TYPE type;
-        double modified, created;
-        QStringList listItems;
-    };
-    struct MirrorPush {
-        QString type, applicationName, body, dismissable, notificationID, sourceDeviceID, sourceUserID, title, sourceDeviceNickname;
-    };
 
 private:
-    typedef QList<Device> DeviceList;
-    typedef QList<Contact> ContactList;
-    typedef QList<Push> PushList;
+    DeviceList m_Devices;
+    ContactList m_Contacts;
+    PushList m_Pushes;
+    CURRENT_OPERATION m_CurrentOperation;
 
-    DeviceList mDevices;
-    ContactList mContacts;
-    PushList mPushes;
-    CURRENT_OPERATION mCurrentOperation;
+    QNetworkAccessManager m_NetworkManager;
+    QWebSocket m_WebSocket;
+    const QUrl m_URLContacts,
+          m_URLDevices,
+          m_URLMe,
+          m_URLPushes,
+          m_URLUploadRequest;
+    const QString m_APIKey;
+    QNetworkAccessManager::NetworkAccessibility m_NetworkAccessibility;
 
-    QNetworkAccessManager mNetworkManager;
-    QWebSocket mWebSocket;
-    const QUrl mURLContacts, mURLDevices, mURLMe, mURLPushes, mURLUploadRequest;
-    const QString mAPIKey;
-    QNetworkAccessManager::NetworkAccessibility mNetworkAccessibility;
-
-    QString mFilePath, mFileName;
-    QHttpMultiPart *multiPart;
-    QFile *file;
+    QString m_FilePath, m_FileName;
+    QHttpMultiPart *m_MultiPart;
+    QFile *m_File;
 
 signals:
     void didReceiveDevices(const DeviceList &devices);
@@ -105,7 +111,7 @@ signals:
      */
     void didReceiveError(const QNetworkReply *networkReply);
 
-private Q_SLOTS:
+private slots:
     void handleNetworkData(QNetworkReply *networkReply);
     void sessionConnected();
     void handleNetworkAccessibilityChange(QNetworkAccessManager::NetworkAccessibility change);
