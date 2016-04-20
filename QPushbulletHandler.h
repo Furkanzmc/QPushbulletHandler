@@ -29,9 +29,10 @@ struct Push {
     PUSH_TYPE type;
     double modified, created;
     QStringList listItems;
+    bool isActive;
 };
 struct MirrorPush {
-    QString type, applicationName, body, dismissable, notificationID, sourceDeviceID, sourceUserID, title, sourceDeviceNickname;
+    QString type = "", subtype = "";
 };
 
 typedef QList<Device> DeviceList;

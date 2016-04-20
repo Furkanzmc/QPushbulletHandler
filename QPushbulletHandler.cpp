@@ -459,6 +459,7 @@ void QPushbulletHandler::parsePushHistoryResponse(const QByteArray &data)
 {
     if (m_CurrentOperation != CURRENT_OPERATION::UPDATE_PUSH_LIST)
         m_Pushes.clear();
+
     QString strReply = (QString)data;
     QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
     QJsonObject jsonObject = jsonResponse.object();
@@ -468,9 +469,21 @@ void QPushbulletHandler::parsePushHistoryResponse(const QByteArray &data)
         QJsonObject jsonObject = value.toObject();
         Push push;
 
-        if (jsonObject["active"].toBool() == false)
+        if (jsonObject["active"].toBool() == false) {
             continue;
+        }
+
+        push.isActive = true;
         push.ID = jsonObject["iden"].toString();
+
+        auto foundIt = std::find_if(m_Pushes.begin(), m_Pushes.end(), [&push](const Push & p) {
+            return p.ID == push.ID;
+        });
+
+        if (foundIt != m_Pushes.end()) {
+            continue;
+        }
+
         push.type = getPushTypeFromString(jsonObject["type"].toString());
         push.targetDeviceID = jsonObject["target_device_iden"].toString();
         push.senderEmail = jsonObject["sender_email"].toString();
@@ -503,7 +516,13 @@ void QPushbulletHandler::parsePushHistoryResponse(const QByteArray &data)
             push.body = jsonObject["body"].toString();
         }
 
-        m_Pushes.append(push);
+        // Try to keep the last message at the last index
+        if (m_CurrentOperation != CURRENT_OPERATION::UPDATE_PUSH_LIST) {
+            m_Pushes.append(push);
+        }
+        else {
+            m_Pushes.prepend(push);
+        }
     }
     emit didReceivePushHistory(m_Pushes);
 }
@@ -571,28 +590,19 @@ PUSH_TYPE QPushbulletHandler::getPushTypeFromString(QString type)
 
 void QPushbulletHandler::parseMirrorPush(QString data)
 {
-    QString strReply = (QString)data;
-    QJsonDocument jsonResponse = QJsonDocument::fromJson(strReply.toUtf8());
+    QJsonDocument jsonResponse = QJsonDocument::fromJson(data.toUtf8());
     QJsonObject jsonObject = jsonResponse.object();
-    if (jsonObject["type"] != "push") {
-        if (jsonObject["type"] == "tickle") {
-            parseTickle(jsonObject);
-        }
+    if (jsonObject["type"] == "tickle") {
+        parseTickle(jsonObject);
         return;
     }
+
     QJsonObject obj = jsonObject["push"].toObject();
 
     MirrorPush mirror;
 
     mirror.type = obj["type"].toString();
-    mirror.applicationName = obj["application_name"].toString();
-    mirror.body = obj["body"].toString();
-    mirror.dismissable = obj["dismissable"].toString() == "true" ? true : false;
-    mirror.notificationID = obj["notification_id"].toInt();
-    mirror.sourceDeviceID = obj["source_device_iden"].toString();
-    mirror.sourceUserID = obj["source_user_iden"].toString();
-    mirror.title = obj["title"].toString();
-    mirror.sourceDeviceNickname = getDeviceNameFromDeviceID(mirror.sourceDeviceID);
+    mirror.subtype = obj["subtype"].toString();
 
     emit didReceiveMirrorPush(mirror);
 }
@@ -610,7 +620,7 @@ void QPushbulletHandler::parseTickle(QJsonObject jsonObject)
             query.addQueryItem("modified_after", QString::fromStdString(created));
             QUrl modifiedURL = m_URLPushes;
             modifiedURL.setQuery(query);
-            getRequest(m_URLPushes);
+            getRequest(modifiedURL);
         }
     }
     else if (jsonObject["subtype"] == "device") {
